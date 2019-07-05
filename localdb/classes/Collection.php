@@ -4,6 +4,28 @@
 class Collection {
 	private $db;
 	private $name;
+	private static $selectors = [];
+
+	public static function addSelector(string $selectorClass) {
+		self::$selectors[] = $selectorClass;
+	}
+
+	/**
+	 * @param string[] $selectorClasses
+	 */
+	public static function addSelectors(...$selectorClasses) {
+		foreach ($selectorClasses as $selectorClass) {
+			self::addSelector($selectorClass);
+		}
+	}
+
+	public static function getSelectors() {
+		return self::$selectors;
+	}
+
+	public static function getSelector($selector, $datas) {
+		return new self::$selectors[$selector]($datas);
+	}
 
 	private function getCompleteCollectionPath() {
 		return $this->db.'/'.$this->name.'.json';
@@ -24,6 +46,7 @@ class Collection {
 	}
 
 	protected function cast_find_options($options, $datas) {
+		$keysToGet = [];
 		if(gettype($options) === 'object') {
 			$_options = [];
 			foreach (get_object_vars($options) as $key => $val) {
@@ -33,6 +56,14 @@ class Collection {
 		}
 		if(empty($options)) {
 			return $datas;
+		}
+
+		foreach ($options as $option => $data) {
+			$_opt = str_replace('$', '', $option);
+			/** @var NoSQLSelector $selector */
+			$selector = new $_opt($data, $datas);
+			$selector->parse();
+			$datas = $selector->get();
 		}
 
 		// traitements
