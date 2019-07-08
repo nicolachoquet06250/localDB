@@ -2,6 +2,9 @@
 
 
 class ModelFinder {
+	/**
+	 * @@var Model[][]|Model[]|Model|integer $datas
+	 */
 	private $datas;
 
 	public function __construct($datas) {
@@ -25,7 +28,7 @@ class ModelFinder {
 	}
 
 	/**
-	 * @return Model[]|Model|integer
+	 * @return Model[][]|Model[]|Model|integer
 	 */
 	public function get() {
 		return $this->datas;
@@ -49,7 +52,18 @@ class ModelFinder {
 		}
 		elseif ($this->is_array()) {
 			foreach ($this->get() as $model) {
-				$result[] = $model->toArray();
+				if(is_array($model)) {
+					$_result = [];
+					foreach ($model as $group => $_model) {
+						$_result[$group] = $_model->toArray();
+					}
+					$result[] = $_result;
+				}
+				else {
+					foreach ($this->get() as $model) {
+						$result[] = $model->toArray();
+					}
+				}
 			}
 		}
 		elseif ($this->is_numeric()) {

@@ -9,6 +9,8 @@ require_once __DIR__.'/classes/core/ModelFinder.php';
 require_once __DIR__.'/classes/core/NoSQLSelector.php';
 require_once __DIR__.'/classes/selectors/keys.php';
 require_once __DIR__.'/classes/selectors/where.php';
+require_once __DIR__.'/classes/selectors/group.php';
+require_once __DIR__.'/classes/selectors/order_by.php';
 
 
 NoSQLSelector::requireAll();
