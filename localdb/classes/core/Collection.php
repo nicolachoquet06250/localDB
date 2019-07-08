@@ -7,7 +7,9 @@ class Collection {
 	private static $selectors = [];
 
 	public static function addSelector(string $selectorClass) {
-		self::$selectors[] = $selectorClass;
+		if(!in_array($selectorClass, self::$selectors)) {
+			self::$selectors[] = $selectorClass;
+		}
 	}
 
 	/**
@@ -31,6 +33,13 @@ class Collection {
 		return $this->db.'/'.$this->name.'.json';
 	}
 
+	/**
+	 * Collection constructor.
+	 *
+	 * @param string $db_path
+	 * @param string $name
+	 * @throws ReflectionException
+	 */
 	public function __construct(string $db_path, string $name) {
 		$this->db = $db_path;
 		$this->name = $name;
@@ -45,8 +54,12 @@ class Collection {
 		return is_file($this->getCompleteCollectionPath());
 	}
 
+	/**
+	 * @param $options
+	 * @param $datas
+	 * @return Model[]|Model
+	 */
 	protected function cast_find_options($options, $datas) {
-		$keysToGet = [];
 		if(gettype($options) === 'object') {
 			$_options = [];
 			foreach (get_object_vars($options) as $key => $val) {
@@ -66,14 +79,16 @@ class Collection {
 			$datas = $selector->get();
 		}
 
-		// traitements
+		if(is_array($datas) && count($datas) === 1) {
+			return $datas[0];
+		}
 		return $datas;
 	}
 
 	/**
 	 * @param stdClass|array $options
 	 * @param string   $model
-	 * @return Model[]|Model
+	 * @return ModelFinder
 	 */
 	public function find($options, string $model) {
 		/** @var Model $model */
@@ -91,7 +106,7 @@ class Collection {
 			$datas = $model->cast($datas);
 		}
 
-		return $this->cast_find_options($options, $datas);
+		return new ModelFinder($this->cast_find_options($options, $datas));
 	}
 
 	private function get() {

@@ -9,6 +9,15 @@ class Client {
 		$this->connector = $connector;
 	}
 
+	/**
+	 * @throws ReflectionException
+	 */
+	public function affectThisToAllModels() {
+		foreach (Model::getAll() as $model) {
+			$model::setClient($this);
+		}
+	}
+
 	public function close() {}
 
 	public function setConnections(array $collections): void {
@@ -19,6 +28,11 @@ class Client {
 		return (new Collection($this->connector->getDbDirectory(), $collection))->exists();
 	}
 
+	/**
+	 * @param string $collection
+	 * @return Collection
+	 * @throws ReflectionException
+	 */
 	public function collection(string $collection): Collection {
 		$_collection = $this->hasCollection($collection) ? $this->collections[$collection] : null;
 

@@ -2,11 +2,40 @@
 
 
 class Model {
+	protected static $collection = null;
+	/**
+	 * @var Client $client
+	 */
+	protected static $client = null;
+
+	/**
+	 * @return string[]
+	 * @throws ReflectionException
+	 */
+	public static function getAll(): array {
+		$models = [];
+		foreach (get_declared_classes() as $class) {
+			$class_ref = new ReflectionClass($class);
+			if($class_ref->getParentClass() && $class_ref->getParentClass()->name === self::class) {
+				$models[] = $class_ref->getName();
+			}
+		}
+		return $models;
+	}
+
+	public static function setCollection(Collection $collection) {
+		self::$collection = $collection;
+	}
+
+	public static function setClient(Client $client) {
+		self::$client = $client;
+	}
+
 	public function __construct(array $props = []) {
 		$this->cast($props);
 	}
 
-	private function getCollectionName() {
+	public function getCollectionName() {
 		$class = get_class($this);
 		$class = explode('\\', $class);
 		$class = $class[count($class) - 1];
@@ -51,7 +80,44 @@ class Model {
 		return $array;
 	}
 
-	public function save(Client $client) {
-		return $client->collection($this->getCollectionName())->add($this);
+	/**
+	 * @return bool
+	 * @throws ReflectionException
+	 */
+	public function save() {
+		return $this->get_collection()->add($this);
+	}
+
+	/**
+	 * @param string $field
+	 * @param mixed  $value
+	 * @return ModelFinder
+	 * @throws ReflectionException
+	 */
+	public function get_from(string $field, $value) {
+		return $this->get_collection()->find([ '$where' => [
+			[ $field, '=', $value ]
+		] ], get_class($this));
+	}
+
+	/**
+	 * @param string $field
+	 * @param string $regex
+	 * @param bool   $reverse
+	 * @return ModelFinder
+	 * @throws ReflectionException
+	 */
+	public function get_match(string $field, string $regex, $reverse = false) {
+		return $this->get_collection()->find([ '$where' => [
+			'match' => [ $field, $regex, 'reverse' => $reverse ]
+		] ], get_class($this));
+	}
+
+	/**
+	 * @return Collection
+	 * @throws ReflectionException
+	 */
+	public function get_collection() {
+		return self::$client->collection($this->getCollectionName());
 	}
 }
