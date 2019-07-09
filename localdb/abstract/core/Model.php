@@ -1,8 +1,8 @@
 <?php
 
 
-class Model {
-	protected static $collection = null;
+abstract class Model {
+	use TModel;
 	/**
 	 * @var Client $client
 	 */
@@ -23,27 +23,12 @@ class Model {
 		return $models;
 	}
 
-	public static function setCollection(Collection $collection) {
-		self::$collection = $collection;
-	}
-
 	public static function setClient(Client $client) {
 		self::$client = $client;
 	}
 
 	public function __construct(array $props = []) {
 		$this->cast($props);
-	}
-
-	public function getCollectionName() {
-		$class = get_class($this);
-		$class = explode('\\', $class);
-		$class = $class[count($class) - 1];
-		$class = preg_replace_callback('/([A-Z][a-z]+)/', function ($matches) {
-			return strtolower($matches[1]).'_';
-		}, $class);
-		$class = substr($class, 0, strlen($class) - 1);
-		return $class;
 	}
 
 	public function toCollectionItem() {
@@ -118,6 +103,6 @@ class Model {
 	 * @throws ReflectionException
 	 */
 	public function get_collection() {
-		return self::$client->collection($this->getCollectionName());
+		return self::$client->collection(self::getCollectionName());
 	}
 }
