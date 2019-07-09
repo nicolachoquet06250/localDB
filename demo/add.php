@@ -16,6 +16,8 @@ Connector::createDB(DB_PATH)->connect()
 
 		(new MyCollection([ 'name' => 'MyConnection2', 'age' => '24' ]))->save();
 
+		(new MyCollection([ 'name' => 'toto', 'age' => '34' ]))->save();
+
 		// is equal:
 		// /** @var Client $client */
 		// $collection = $client->collection('my_collection');

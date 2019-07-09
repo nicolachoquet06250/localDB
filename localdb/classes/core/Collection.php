@@ -6,6 +6,9 @@ class Collection {
 	private $name;
 	private static $selectors = [];
 
+	const JSON_FORMAT = 'json';
+	const BSON_FORMAT = 'bson';
+
 	public static function addSelector(string $selectorClass) {
 		if(!in_array($selectorClass, self::$selectors)) {
 			self::$selectors[] = $selectorClass;
@@ -29,8 +32,17 @@ class Collection {
 		return new self::$selectors[$selector]($datas);
 	}
 
-	private function getCompleteCollectionPath() {
-		return $this->db.'/'.$this->name.'.json';
+	private static function fromBson($data) {
+		$data = self::fromJson(\MongoDB\BSON\toJSON($data), true);
+		return $data;
+	}
+
+	private static function fromJson($data, $assoc = false) {
+		return json_decode($data, $assoc);
+	}
+
+	public function getCompleteCollectionPath($format = self::JSON_FORMAT) {
+		return $this->db.'/'.$this->name.'.'.$format;
 	}
 
 	/**
@@ -110,11 +122,17 @@ class Collection {
 	}
 
 	private function get() {
-		return json_decode(file_get_contents($this->getCompleteCollectionPath()));
+		$is_dev = defined('DEV') && DEV === true;
+		$data = file_get_contents($this->getCompleteCollectionPath(
+			($is_dev ? self::JSON_FORMAT : self::BSON_FORMAT)
+		));
+		return $is_dev ? self::fromJson($data) : self::fromBson($data);
 	}
 
-	private function save($datas) {
-		return file_put_contents($this->getCompleteCollectionPath(), json_encode($datas));
+	public function save($datas) {
+		return defined('DEV') && DEV === true ?
+			file_put_contents($this->getCompleteCollectionPath(), json_encode($datas))
+			: (new ModelSaver($datas, $this))->save();
 	}
 
 	protected function size($object = null) {

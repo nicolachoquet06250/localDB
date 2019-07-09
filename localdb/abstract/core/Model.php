@@ -2,7 +2,6 @@
 
 
 abstract class Model {
-	use TModel;
 	/**
 	 * @var Client $client
 	 */
@@ -21,6 +20,17 @@ abstract class Model {
 			}
 		}
 		return $models;
+	}
+
+	private function get_collection_name() {
+		$class = get_class($this);
+		$class = explode('\\', $class);
+		$class = $class[count($class) - 1];
+		$class = preg_replace_callback('/([A-Z][a-z]+)/', function ($matches) {
+			return strtolower($matches[1]).'_';
+		}, $class);
+		$class = substr($class, 0, strlen($class) - 1);
+		return $class;
 	}
 
 	public static function setClient(Client $client) {
@@ -65,6 +75,10 @@ abstract class Model {
 		return $array;
 	}
 
+	public function toJson() {
+		return json_encode($this->toArray());
+	}
+
 	/**
 	 * @return bool
 	 * @throws ReflectionException
@@ -103,6 +117,6 @@ abstract class Model {
 	 * @throws ReflectionException
 	 */
 	public function get_collection() {
-		return self::$client->collection(self::getCollectionName());
+		return self::$client->collection($this->get_collection_name());
 	}
 }
